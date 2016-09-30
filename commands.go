@@ -116,6 +116,21 @@ func (c *Cmd) Command(name, desc string, init CmdInitializer) {
 	})
 }
 
+func (c *Cmd) CommandLong(name, desc, long string, init CmdInitializer) {
+	c.commands = append(c.commands, &Cmd{
+		LongDesc:      long,
+		ErrorHandling: c.ErrorHandling,
+		name:          name,
+		desc:          desc,
+		init:          init,
+		commands:      []*Cmd{},
+		options:       []*opt{},
+		optionsIdx:    map[string]*opt{},
+		args:          []*arg{},
+		argsIdx:       map[string]*arg{},
+	})
+}
+
 /*
 Bool can be used to add a bool option or argument to a command.
 It accepts either a BoolOpt or a BoolArg struct.
