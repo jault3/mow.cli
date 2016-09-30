@@ -94,7 +94,7 @@ In case of an incorrect usage, and depending on the configured ErrorHandling pol
 it may return an error, panic or exit
 */
 func (cli *Cli) Run(args []string) error {
-	if err := cli.doInit(); err != nil {
+	if err := cli.DoInit(); err != nil {
 		panic(err)
 	}
 	inFlow := &step{desc: "RootIn"}

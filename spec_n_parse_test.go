@@ -20,7 +20,7 @@ func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 	cmd.ErrorHandling = flag.ContinueOnError
 	init(cmd)
 
-	err := cmd.doInit()
+	err := cmd.DoInit()
 	require.Nil(t, err, "should parse")
 	t.Logf("testing spec %s with args: %v", spec, args)
 	inFlow := &step{}
@@ -40,7 +40,7 @@ func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 	cmd.ErrorHandling = flag.ContinueOnError
 	init(cmd)
 
-	err := cmd.doInit()
+	err := cmd.DoInit()
 	require.NoError(t, err, "should parse")
 	t.Logf("testing spec %s with args: %v", spec, args)
 	inFlow := &step{}
@@ -59,7 +59,7 @@ func badSpec(t *testing.T, spec string, init CmdInitializer) {
 	init(cmd)
 
 	t.Logf("testing bad spec %s", spec)
-	err := cmd.doInit()
+	err := cmd.DoInit()
 	require.NotNil(t, err, "Bad spec %s should have failed to parse", spec)
 	t.Logf("Bad spec %s did fail to parse with error: %v", spec, err)
 }

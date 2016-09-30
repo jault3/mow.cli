@@ -244,7 +244,7 @@ func (c *Cmd) Var(p VarParam) {
 	}
 }
 
-func (c *Cmd) doInit() error {
+func (c *Cmd) DoInit() error {
 	if c.init != nil {
 		c.init(c)
 	}
@@ -446,7 +446,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 	arg := args[0]
 	for _, sub := range c.commands {
 		if arg == sub.name {
-			if err := sub.doInit(); err != nil {
+			if err := sub.DoInit(); err != nil {
 				panic(err)
 			}
 			return sub.parse(args[1:], entry, newInFlow, newOutFlow)
