@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"strings"
 	"text/tabwriter"
 )
@@ -28,10 +29,10 @@ type Cmd struct {
 	ErrorHandling flag.ErrorHandling
 
 	init CmdInitializer
-	name string
+	Name string
 	desc string
 
-	commands   []*Cmd
+	Commands   []*Cmd
 	options    []*opt
 	optionsIdx map[string]*opt
 	args       []*arg
@@ -103,12 +104,12 @@ the last argument, init, is a function that will be called by mow.cli to further
 (sub) command, e.g. to add options, arguments and the code to execute
 */
 func (c *Cmd) Command(name, desc string, init CmdInitializer) {
-	c.commands = append(c.commands, &Cmd{
+	c.Commands = append(c.Commands, &Cmd{
 		ErrorHandling: c.ErrorHandling,
-		name:          name,
+		Name:          name,
 		desc:          desc,
 		init:          init,
-		commands:      []*Cmd{},
+		Commands:      []*Cmd{},
 		options:       []*opt{},
 		optionsIdx:    map[string]*opt{},
 		args:          []*arg{},
@@ -117,13 +118,13 @@ func (c *Cmd) Command(name, desc string, init CmdInitializer) {
 }
 
 func (c *Cmd) CommandLong(name, desc, long string, init CmdInitializer) {
-	c.commands = append(c.commands, &Cmd{
+	c.Commands = append(c.Commands, &Cmd{
 		LongDesc:      long,
 		ErrorHandling: c.ErrorHandling,
-		name:          name,
+		Name:          name,
 		desc:          desc,
 		init:          init,
-		commands:      []*Cmd{},
+		Commands:      []*Cmd{},
 		options:       []*opt{},
 		optionsIdx:    map[string]*opt{},
 		args:          []*arg{},
@@ -264,9 +265,9 @@ func (c *Cmd) DoInit() error {
 		c.init(c)
 	}
 
-	parents := append(c.parents, c.name)
+	parents := append(c.parents, c.Name)
 
-	for _, sub := range c.commands {
+	for _, sub := range c.Commands {
 		sub.parents = parents
 	}
 
@@ -320,32 +321,36 @@ func (c *Cmd) PrintLongHelp() {
 }
 
 func (c *Cmd) printHelp(longDesc bool) {
-	full := append(c.parents, c.name)
+	c.PrintLongHelpTo(longDesc, stdErr)
+}
+
+func (c *Cmd) PrintLongHelpTo(longDesc bool, writer io.Writer) {
+	full := append(c.parents, c.Name)
 	path := strings.Join(full, " ")
-	fmt.Fprintf(stdErr, "\nUsage: %s", path)
+	fmt.Fprintf(writer, "\nUsage: %s", path)
 
 	spec := strings.TrimSpace(c.Spec)
 	if len(spec) > 0 {
-		fmt.Fprintf(stdErr, " %s", spec)
+		fmt.Fprintf(writer, " %s", spec)
 	}
 
-	if len(c.commands) > 0 {
-		fmt.Fprint(stdErr, " COMMAND [arg...]")
+	if len(c.Commands) > 0 {
+		fmt.Fprint(writer, " COMMAND [arg...]")
 	}
-	fmt.Fprint(stdErr, "\n\n")
+	fmt.Fprint(writer, "\n\n")
 
 	desc := c.desc
 	if longDesc && len(c.LongDesc) > 0 {
 		desc = c.LongDesc
 	}
 	if len(desc) > 0 {
-		fmt.Fprintf(stdErr, "%s\n", desc)
+		fmt.Fprintf(writer, "%s\n", desc)
 	}
 
-	w := tabwriter.NewWriter(stdErr, 15, 1, 3, ' ', 0)
+	w := tabwriter.NewWriter(writer, 15, 1, 3, ' ', 0)
 
 	if len(c.args) > 0 {
-		fmt.Fprintf(stdErr, "\nArguments:\n")
+		fmt.Fprintf(writer, "\nArguments:\n")
 
 		for _, arg := range c.args {
 			desc := c.formatDescription(arg.desc, arg.envVar)
@@ -357,7 +362,7 @@ func (c *Cmd) printHelp(longDesc bool) {
 	}
 
 	if len(c.options) > 0 {
-		fmt.Fprintf(stdErr, "\nOptions:\n")
+		fmt.Fprintf(writer, "\nOptions:\n")
 
 		for _, opt := range c.options {
 			desc := c.formatDescription(opt.desc, opt.envVar)
@@ -367,17 +372,17 @@ func (c *Cmd) printHelp(longDesc bool) {
 		w.Flush()
 	}
 
-	if len(c.commands) > 0 {
-		fmt.Fprintf(stdErr, "\nCommands:\n")
+	if len(c.Commands) > 0 {
+		fmt.Fprintf(writer, "\nCommands:\n")
 
-		for _, c := range c.commands {
-			fmt.Fprintf(w, "  %s\t%s\n", c.name, c.desc)
+		for _, c := range c.Commands {
+			fmt.Fprintf(writer, "  %s\t%s\n", c.Name, c.desc)
 		}
 		w.Flush()
 	}
 
-	if len(c.commands) > 0 {
-		fmt.Fprintf(stdErr, "\nRun '%s COMMAND --help' for more information on a command.\n", path)
+	if len(c.Commands) > 0 {
+		fmt.Fprintf(writer, "\nRun '%s COMMAND --help' for more information on a command.\n", path)
 	}
 }
 
@@ -429,7 +434,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 	newInFlow := &step{
 		do:    c.Before,
 		error: outFlow,
-		desc:  fmt.Sprintf("%s.Before", c.name),
+		desc:  fmt.Sprintf("%s.Before", c.Name),
 	}
 	inFlow.success = newInFlow
 
@@ -437,7 +442,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 		do:      c.After,
 		success: outFlow,
 		error:   outFlow,
-		desc:    fmt.Sprintf("%s.After", c.name),
+		desc:    fmt.Sprintf("%s.After", c.Name),
 	}
 
 	args = args[nargsLen:]
@@ -447,7 +452,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 				do:      c.Action,
 				success: newOutFlow,
 				error:   newOutFlow,
-				desc:    fmt.Sprintf("%s.Action", c.name),
+				desc:    fmt.Sprintf("%s.Action", c.Name),
 			}
 
 			entry.run(nil)
@@ -459,8 +464,8 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 	}
 
 	arg := args[0]
-	for _, sub := range c.commands {
-		if arg == sub.name {
+	for _, sub := range c.Commands {
+		if arg == sub.Name {
 			if err := sub.DoInit(); err != nil {
 				panic(err)
 			}
@@ -485,8 +490,8 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 
 func (c *Cmd) isArgSet(args []string, searchArgs []string) bool {
 	for _, arg := range args {
-		for _, sub := range c.commands {
-			if arg == sub.name {
+		for _, sub := range c.Commands {
+			if arg == sub.Name {
 				return false
 			}
 		}
@@ -507,8 +512,8 @@ func (c *Cmd) getOptsAndArgs(args []string) int {
 	consumed := 0
 
 	for _, arg := range args {
-		for _, sub := range c.commands {
-			if arg == sub.name {
+		for _, sub := range c.Commands {
+			if arg == sub.Name {
 				return consumed
 			}
 		}

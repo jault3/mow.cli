@@ -33,7 +33,7 @@ name and description will be used to construct the help message for the app:
 func App(name, desc string) *Cli {
 	return &Cli{
 		Cmd: &Cmd{
-			name:          name,
+			Name:          name,
 			desc:          desc,
 			optionsIdx:    map[string]*opt{},
 			argsIdx:       map[string]*arg{},

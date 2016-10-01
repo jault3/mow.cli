@@ -362,7 +362,7 @@ e.g. when the value was initially populated from an environment variable, and th
 ```go
 type Durations []time.Duration
 
-// Make it implement flag.Value 
+// Make it implement flag.Value
 func (d *Durations) Set(v string) error {
 	parsed, err := time.ParseDuration(v)
 	if err != nil {

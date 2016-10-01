@@ -12,7 +12,7 @@ func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 	defer suppressOutput()()
 
 	cmd := &Cmd{
-		name:       "test",
+		Name:       "test",
 		optionsIdx: map[string]*opt{},
 		argsIdx:    map[string]*arg{},
 	}
@@ -32,7 +32,7 @@ func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 	defer suppressOutput()()
 
 	cmd := &Cmd{
-		name:       "test",
+		Name:       "test",
 		optionsIdx: map[string]*opt{},
 		argsIdx:    map[string]*arg{},
 	}
@@ -50,7 +50,7 @@ func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 
 func badSpec(t *testing.T, spec string, init CmdInitializer) {
 	cmd := &Cmd{
-		name:       "test",
+		Name:       "test",
 		optionsIdx: map[string]*opt{},
 		argsIdx:    map[string]*arg{},
 	}
